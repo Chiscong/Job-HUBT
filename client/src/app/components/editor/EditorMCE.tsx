@@ -3,16 +3,18 @@ import { Editor } from "@tinymce/tinymce-react"
 
 export const EditorMCE = (props: {
     editorRef: any,
-    value: string
+    value: string,
+    id? : string
 }) => {
-    const { editorRef, value } = props;
+    const { editorRef, value , id = ""} = props;
 
     return (
         <>
             <Editor
-                apiKey={process.env.API_TINYMCE_KEYE}
+                apiKey={process.env.API_TINYMCE_KEY}
                 onInit={(_evt, editor) => editorRef.current = editor}
                 initialValue={value}
+                id = {id}
                 init={{
                     height: 500,
                     plugins: [
