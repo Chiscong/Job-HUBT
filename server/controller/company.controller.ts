@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import AccountCompany from "../models/account-company.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Job from "../models/job.model";
 import { AccountRequest } from "../interfaces/request.interface";
 export const registerPost = async (req: Request, res: Response) => {
     const existAccount = await AccountCompany.findOne({
@@ -78,5 +79,37 @@ export const profilePatch = async (req: AccountRequest, res: Response) => {
         code: "success",
         message: "Cập nhật thành công!"
     })
+
+}
+export const createJobPost = async (req: AccountRequest, res: Response) => {
+    try {
+        req.body.companyId = req.account.id;
+        req.body.salaryMin = req.body.salaryMin ? parseInt(req.body.salaryMin) : 0;
+        req.body.salaryMax = req.body.salaryMax ? parseInt(req.body.salaryMax) : 0;
+        req.body.technologies = req.body.technologies ? req.body.technologies.split(", ") : [];
+        req.body.images = [];
+
+        // Xử lý mảng images
+        if (req.files) {
+            for (const file of req.files as any[]) {
+                req.body.images.push(file.path);
+            }
+        }
+        // Hết Xử lý mảng images
+
+        const newRecord = new Job(req.body);
+        await newRecord.save();
+
+        res.json({
+            code: "success",
+            message: "Tạo công việc thành công!"
+        })
+    } catch (error) {
+        console.log(error);
+        res.json({
+            code: "error",
+            message: "Dữ liệu không hợp lệ!"
+        })
+    }
 
 }
