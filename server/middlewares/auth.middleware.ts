@@ -3,16 +3,16 @@ import jwt from "jsonwebtoken";
 import AccountUser from "../models/account-user.model";
 import { AccountRequest } from "../interfaces/request.interface";
 import AccountCompany from "../models/account-company.model";
-
+import City from "../models/city.model";
 export const verifyTokenUser = async (
-  req: AccountRequest, 
-  res: Response, 
+  req: AccountRequest,
+  res: Response,
   next: NextFunction
 ) => {
   try {
     const token = req.cookies.token;
 
-    if(!token) {
+    if (!token) {
       res.json({
         code: "error",
         message: "Vui lòng gửi kèm theo token!"
@@ -21,14 +21,14 @@ export const verifyTokenUser = async (
     }
 
     var decoded = jwt.verify(token, `${process.env.JWT_SECRET}`) as jwt.JwtPayload;
-    const { id, email } =decoded;
-    
+    const { id, email } = decoded;
+
     const existAccount = await AccountUser.findOne({
       _id: id,
       email: email,
     })
 
-    if(!existAccount) {
+    if (!existAccount) {
       res.clearCookie("token");
       res.json({
         code: "error",
@@ -50,14 +50,14 @@ export const verifyTokenUser = async (
 }
 
 export const verifyTokenCompany = async (
-  req: AccountRequest, 
-  res: Response, 
+  req: AccountRequest,
+  res: Response,
   next: NextFunction
 ) => {
   try {
     const token = req.cookies.token;
 
-    if(!token) {
+    if (!token) {
       res.json({
         code: "error",
         message: "Vui lòng gửi kèm theo token!"
@@ -66,14 +66,14 @@ export const verifyTokenCompany = async (
     }
 
     var decoded = jwt.verify(token, `${process.env.JWT_SECRET}`) as jwt.JwtPayload;
-    const { id, email } =decoded;
-    
+    const { id, email } = decoded;
+
     const existAccount = await AccountCompany.findOne({
       _id: id,
       email: email,
     })
 
-    if(!existAccount) {
+    if (!existAccount) {
       res.clearCookie("token");
       res.json({
         code: "error",
@@ -83,6 +83,14 @@ export const verifyTokenCompany = async (
     }
 
     req.account = existAccount;
+    if (existAccount.city) {
+      const city = await City.findOne({
+        _id: existAccount.city
+      })
+      if (city) {
+        req.account.companyCity = city.name;
+      }
+    }
 
     next();
   } catch (error) {
