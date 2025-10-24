@@ -2,13 +2,14 @@
 "use client"
 import { useAuth } from "@/hook/useAuth"
 import JustValidate from "just-validate";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FilePond, registerPlugin } from 'react-filepond';
 import 'filepond/dist/filepond.min.css';
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 import { Toaster, toast } from 'sonner';
+import { EditorMCE } from "@/app/components/editor/EditorMCE";
 
 // Register the plugin
 registerPlugin(
@@ -16,10 +17,11 @@ registerPlugin(
   FilePondPluginImagePreview
 );
 
-export const FormProfile = () => {
+const FormProfile = () => {
   const { infoCompany } = useAuth();
   const [logos, setLogos] = useState<any[]>([]);
   const [cityList, setCityList] = useState<any[]>([]);
+  const editorRef = useRef(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/city/list`)
@@ -80,7 +82,10 @@ export const FormProfile = () => {
     const workOvertime = event.target.workOvertime.value;
     const email = event.target.email.value;
     const phone = event.target.phone.value;
-    const description = event.target.description.value;
+    let description = "";
+    if(editorRef.current) {
+      description = (editorRef.current as any).getContent();
+    }
     const city = event.target.city.value;
     let logo = null;
     if(logos.length > 0) {
@@ -259,13 +264,17 @@ export const FormProfile = () => {
             <label htmlFor="description" className="block font-[500] text-[14px] text-black mb-[5px]">
               Mô tả chi tiết
             </label>
-            <textarea 
+            {/* <textarea 
               name="description" 
               id="description" 
               className="w-[100%] h-[350px] border border-[#DEDEDE] rounded-[4px] py-[14px] px-[20px] font-[500] text-[14px] text-black"
               defaultValue={infoCompany.description}
             >
-            </textarea>
+            </textarea> */}
+            <EditorMCE 
+              editorRef={editorRef} 
+              value={infoCompany.description} 
+            />
           </div>
           <div className="sm:col-span-2">
             <button className="bg-[#0088FF] rounded-[4px] h-[48px] px-[20px] font-[700] text-[16px] text-white">
