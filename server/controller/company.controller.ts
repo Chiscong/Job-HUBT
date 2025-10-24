@@ -1,0 +1,82 @@
+import { Request, Response } from "express";
+import AccountCompany from "../models/account-company.model";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { AccountRequest } from "../interfaces/request.interface";
+export const registerPost = async (req: Request, res: Response) => {
+    const existAccount = await AccountCompany.findOne({
+        email: req.body.email
+    });
+    if (existAccount) {
+        res.json({
+            code: "error",
+            message: "Email đã tồn tại!"
+        });
+        return;
+    }
+    // Mã hóa mật khẩu
+    const salt = await bcrypt.genSalt(10);
+    req.body.password = await bcrypt.hash(req.body.password, salt);
+    const newAccount = new AccountCompany(req.body);
+    await newAccount.save();
+    res.json({
+        code: "success",
+        message: "Đăng ký thành công!"
+    });
+
+}
+export const loginPost = async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    const existAccount = await AccountCompany.findOne({
+        email: email
+    });
+    if (!existAccount) {
+        res.json({
+            code: "error",
+            message: "Email không tồn tại!"
+        });
+        return;
+    }
+    const isPasswordValid = await bcrypt.compare(password, `${existAccount.password}`);
+    if (!isPasswordValid) {
+        res.json({
+            code: "error",
+            message: " Sai mật khẩu !"
+        });
+        return;
+    }
+    const token = jwt.sign({
+        id: existAccount._id,
+        email: existAccount.email
+    }, `${process.env.JWT_SECRET}`,
+        {
+            expiresIn: "1d"
+        });
+    res.cookie("token", token, {
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+    });
+    res.json({
+        code: "success",
+        message: "Đăng nhập thành công!"
+    });
+}
+export const profilePatch = async (req: AccountRequest, res: Response) => {
+    if (req.file) {
+        req.body.logo = req.file.path;
+    } else {
+        delete req.body.logo;
+    }
+
+    await AccountCompany.updateOne({
+        _id: req.account.id
+    }, req.body);
+
+    res.json({
+        code: "success",
+        message: "Cập nhật thành công!"
+    })
+
+}
