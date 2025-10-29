@@ -8,20 +8,25 @@ import { FaBriefcase, FaLocationDot, FaUserTie } from "react-icons/fa6"
 /* eslint-disable @next/next/no-img-element */
 const JobList = () => {
   const [jobList, setJobList] = useState<any[]>([]);
-  
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(0);
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/company/job/list`, {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/company/job/list?page=${page}`, {
       method: "GET",
       credentials: "include", // Gửi kèm cookie
     })
       .then(res => res.json())
       .then(data => {
-        if(data.code == "success") {
+        if (data.code == "success") {
           setJobList(data.jobs);
+          setTotalPages(data.totalPages);
         }
       })
-  }, []);
-
+  }, [page]);
+  const handlePagination = (event: any) => {
+    const values = event.target.value;
+    setPage(parseInt(values));
+  }
   return (
     <>
       <div className="grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-[20px]">
@@ -29,25 +34,25 @@ const JobList = () => {
           const position = positionList.find(pos => pos.value == item.position);
           const workingForm = workingFormList.find(work => work.value == item.workingForm);
           return (
-            <div 
+            <div
               key={item.id}
               className="border border-[#DEDEDE] rounded-[8px] flex flex-col relative truncate"
               style={{
                 background: "linear-gradient(180deg, #F6F6F6 2.38%, #FFFFFF 70.43%)"
               }}
             >
-              <img 
-                src="/assets/images/card-bg.svg" 
-                alt="" 
-                className="absolute top-[0px] left-[0px] w-[100%] h-auto" 
+              <img
+                src="/assets/images/card-bg.svg"
+                alt=""
+                className="absolute top-[0px] left-[0px] w-[100%] h-auto"
               />
-              <div 
-                className="relative mt-[20px] w-[116px] h-[116px] bg-white mx-auto rounded-[8px] p-[10px]" 
+              <div
+                className="relative mt-[20px] w-[116px] h-[116px] bg-white mx-auto rounded-[8px] p-[10px]"
                 style={{
                   boxShadow: "0px 4px 24px 0px #0000001F"
                 }}
               >
-                <img 
+                <img
                   src={item.companyLogo}
                   alt={item.title}
                   className="w-[100%] h-[100%] object-contain"
@@ -72,7 +77,7 @@ const JobList = () => {
                 <FaLocationDot className="text-[16px]" /> {item.companyCity}
               </div>
               <div className="mt-[12px] mb-[20px] mx-[16px] flex flex-wrap justify-center gap-[8px]">
-                {item.technologies.map((itemTech: string, indexTech: number) =>(
+                {item.technologies.map((itemTech: string, indexTech: number) => (
                   <div key={indexTech} className="border border-[#DEDEDE] rounded-[20px] py-[6px] px-[16px] font-[400] text-[12px] text-[#414042]">
                     {itemTech}
                   </div>
@@ -92,10 +97,17 @@ const JobList = () => {
       </div>
 
       <div className="mt-[30px]">
-        <select name="" className="border border-[#DEDEDE] rounded-[8px] py-[12px] px-[18px] font-[400] text-[16px] text-[#414042]">
-          <option value="">Trang 1</option>
-          <option value="">Trang 2</option>
-          <option value="">Trang 3</option>
+        <select
+          name=""
+          className="border border-[#DEDEDE] rounded-[8px] py-[12px] px-[18px] font-[400] text-[16px] text-[#414042]"
+          onChange={handlePagination}
+        >
+          {Array(totalPages).fill("").map((item, index) => (
+            <option key={index} value={index+1}>
+              Trang {index+1}
+            </option>
+          ))}
+
         </select>
       </div>
     </>
